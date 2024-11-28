@@ -912,3 +912,41 @@ SMODS.Joker{ --Lucky 7s
         end
     end
 }
+
+SMODS.Joker{ --Alloy
+    name = "Alloy",
+    key = "alloy",
+    loc_txt = {
+        ['name'] = 'Alloy',
+        ['text'] = {
+            [1] = "{C:attention}Gold Cards{} are also considered",
+            [2] = "{C:attention}Steel Cards{}, and vice versa"
+        }
+    },
+    pos = { --temp
+        x = 2,
+        y = 9
+    },
+    cost = 7,
+    rarity = 2,
+    blueprint_compat = false,
+    eternal_compat = true,
+    unlocked = true,
+    discovered = true,
+    --atlas = 'ECjokers',
+    loc_vars = function(self, info_queue, card)
+        info_queue[#info_queue+1] = G.P_CENTERS.m_gold
+        info_queue[#info_queue+1] = G.P_CENTERS.m_steel
+        return
+    end,
+    calculate = function(self, card, context)
+        if context.check_enhancement then
+            if context.other_card.config.center.key == "m_gold" then
+                return {m_steel = true}
+            end
+            if context.other_card.config.center.key == "m_steel" then
+                return {m_gold = true}
+            end
+        end
+    end
+}
