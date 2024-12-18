@@ -167,6 +167,11 @@ SMODS.current_mod.config_tab = function() --Config tab
             ref_table = ECconfig,
             ref_value = "wave2",
         }),
+        create_toggle({
+            label = "Page 3 Jokers (restart required)",
+            ref_table = ECconfig,
+            ref_value = "wave3",
+        }),
       },
     }
 end
@@ -262,14 +267,14 @@ SMODS.Joker{ --Double Rainbow
     end,
 
     calculate = function(self, card, context)
-        if context.repetition and context.cardarea == G.play and context.other_card.ability.name == 'Lucky Card' then
+        if context.repetition and context.cardarea == G.play and SMODS.has_enhancement(context.other_card, 'm_lucky') then
             return {
                 message = localize('k_again_ex'),
                 repetitions = 1,
                 card = card
             }
         
-        elseif context.repetition and context.cardarea == G.hand and context.other_card.ability.name == 'Lucky Card' then
+        elseif context.repetition and context.cardarea == G.hand and SMODS.has_enhancement(context.other_card, 'm_lucky') then
             if (next(context.card_effects[1]) or #context.card_effects > 1) then
                 return {
                     message = localize('k_again_ex'),
@@ -569,7 +574,7 @@ SMODS.Joker{ --Warlock
             card.ability.extra.destructo = {}
 
         
-        elseif context.cardarea == G.play and context.individual and context.other_card.ability.name == "Lucky Card" then
+        elseif context.cardarea == G.play and context.individual and SMODS.has_enhancement(context.other_card, 'm_lucky') then
             if pseudorandom('witch') < G.GAME.probabilities.normal / card.ability.extra.odds then
                 if #G.consumeables.cards + G.GAME.consumeable_buffer < G.consumeables.config.card_limit then
                     G.GAME.consumeable_buffer = G.GAME.consumeable_buffer + 1
@@ -1572,7 +1577,7 @@ SMODS.Joker{ --Prideful Joker
     end,
 
     calculate = function(self, card, context)
-        if context.cardarea == G.play and context.individual and context.other_card.ability.name == "Wild Card" then
+        if context.cardarea == G.play and context.individual and SMODS.has_enhancement(context.other_card, 'm_wild') then
             return{
                 mult = card.ability.extra,
                 card = card
@@ -2031,4 +2036,110 @@ SMODS.Joker{ --Go Fish
         end
     end
 }
+end
+
+-- Page 3 Jokers
+if ECconfig.wave3 then
+SMODS.Joker{ --Lucky 7s
+    name = "Lucky 7s",
+    key = "lucky7s",
+    loc_txt = {
+        ['name'] = 'Lucky 7s',
+        ['text'] = {
+            [1] = "{C:attention}7s{} are considered",
+            [2] = "{C:attention}Lucky Cards{}"
+        }
+    },
+    pos = { --temp
+        x = 2,
+        y = 9
+    },
+    cost = 7,
+    rarity = 2,
+    blueprint_compat = false,
+    eternal_compat = true,
+    unlocked = true,
+    discovered = true,
+    --atlas = 'ECjokers',
+    loc_vars = function(self, info_queue, card)
+        info_queue[#info_queue+1] = G.P_CENTERS.m_lucky 
+        return
+    end,
+    calculate = function(self, card, context)
+        if context.check_enhancement and SMODS.Ranks[context.other_card.base.value].key == "7" then
+            return {m_lucky = true}
+        end
+    end
+}
+
+SMODS.Joker{ --Alloy
+    name = "Alloy",
+    key = "alloy",
+    loc_txt = {
+        ['name'] = 'Alloy',
+        ['text'] = {
+            [1] = "{C:attention}Gold Cards{} are also considered",
+            [2] = "{C:attention}Steel Cards{}, and vice versa"
+        }
+    },
+    pos = { --temp
+        x = 2,
+        y = 9
+    },
+    cost = 7,
+    rarity = 2,
+    blueprint_compat = false,
+    eternal_compat = true,
+    unlocked = true,
+    discovered = true,
+    --atlas = 'ECjokers',
+    loc_vars = function(self, info_queue, card)
+        info_queue[#info_queue+1] = G.P_CENTERS.m_gold
+        info_queue[#info_queue+1] = G.P_CENTERS.m_steel
+        return
+    end,
+    calculate = function(self, card, context)
+        if context.check_enhancement then
+            if context.other_card.config.center.key == "m_gold" then
+                return {m_steel = true}
+            end
+            if context.other_card.config.center.key == "m_steel" then
+                return {m_gold = true}
+            end
+        end
+    end
+}
+
+test = true
+if test then
+_RELEASE_MODE = false
+SMODS.Joker{
+    name = "test",
+    key = "test",
+    loc_txt = {
+        ['name'] = 'Test',
+        ['text'] = {
+            [1] = "All cards have",
+            [2] = "all enhancements"
+        }
+    },
+    pos = { --temp
+        x = 2,
+        y = 9
+    },
+    cost = 7,
+    rarity = 4,
+    blueprint_compat = false,
+    eternal_compat = true,
+    unlocked = true,
+    discovered = true,
+    --atlas = 'ECjokers',
+    calculate = function(self, card, context)
+        if context.check_enhancement then
+            return {m_bonus = true, m_mult = true, m_wild = true, m_glass = true, m_steel = true, m_stone = true, m_gold = true, m_lucky = true}
+        end
+    end
+}
+end
+
 end
